@@ -66,7 +66,7 @@ async function mainMenu() {
         await require('./followLikeDmFollowersTarget');
         break;
       case 'followLikeCommentByLocation':
-        console.log(chalk.yellow('\nFitur ini akan segera hadir! (Coming soon)\n'));
+        await require('./followLikeCommentByLocation');
         break;
       case 'unfollowNotFollowback':
         console.log(chalk.yellow('\nFitur ini akan segera hadir! (Coming soon)\n'));
