@@ -63,7 +63,7 @@ async function mainMenu() {
         await require('./aiCombo');
         break;
       case 'followLikeDmFollowersTarget':
-        console.log(chalk.yellow('\nFitur ini akan segera hadir! (Coming soon)\n'));
+        await require('./followLikeDmFollowersTarget');
         break;
       case 'followLikeCommentByLocation':
         console.log(chalk.yellow('\nFitur ini akan segera hadir! (Coming soon)\n'));

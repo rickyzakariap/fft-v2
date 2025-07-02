@@ -161,6 +161,24 @@ This tool is for educational and personal use only. Users are responsible for co
 
 Project ini sedang dalam proses optimalisasi dan modularisasi. Semua konfigurasi sensitif (seperti username, password) akan dipindahkan ke file .env. Struktur folder dan file akan diubah agar lebih mudah dikembangkan dan dirawat.
 
+## Menu Utama & Fitur
+
+- Information / About
+- Bot Like Timeline
+- Bot Like Target User
+- Mass Delete Post/Photo
+- Follow Followers Target
+- Like + Comment Followers Target
+- Follow + Like Followers Target
+- Follow + Like + Comment Followers Target
+- Follow + Like + DM Followers Target
+- Follow + Like + Comment by Hashtag
+- Follow + Like + Comment by Location
+- Unfollow All Following
+- Unfollow Not Followback
+- Mass Story View
+- Exit
+
 ---
 
 **Happy Automating! 🤖✨** 
