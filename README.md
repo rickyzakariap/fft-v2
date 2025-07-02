@@ -157,6 +157,10 @@ This project is for educational purposes only. Use at your own risk and in compl
 
 This tool is for educational and personal use only. Users are responsible for complying with Instagram's Terms of Service and applicable laws. The developers are not responsible for any account restrictions or bans that may occur from using this tool.
 
+# Catatan Optimalisasi
+
+Project ini sedang dalam proses optimalisasi dan modularisasi. Semua konfigurasi sensitif (seperti username, password) akan dipindahkan ke file .env. Struktur folder dan file akan diubah agar lebih mudah dikembangkan dan dirawat.
+
 ---
 
 **Happy Automating! 🤖✨** 
