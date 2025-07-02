@@ -69,7 +69,7 @@ async function mainMenu() {
         await require('./followLikeCommentByLocation');
         break;
       case 'unfollowNotFollowback':
-        console.log(chalk.yellow('\nFitur ini akan segera hadir! (Coming soon)\n'));
+        await require('./unfollowNotFollowback');
         break;
       case 'massDelete':
         await require('./massDelete');
