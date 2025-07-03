@@ -104,6 +104,21 @@ All actions (unfollow, like, follow, view story, AI combo) are logged to `logs/a
 [YYYY-MM-DD HH:mm:ss] [feature] username | detail | status
 ```
 
+## 📄 Action Logging
+
+All actions (follow, like, comment, DM, etc) are logged to `logs/actions.log` in this format:
+```
+[YYYY-MM-DDTHH:mm:ss.sssZ] [feature] username | status
+```
+- Example:
+  - `[2024-06-07T12:34:56.789Z] [follow] johndoe | FOLLOWED`
+  - `[2024-06-07T12:35:01.123Z] [autolikeByFollowers] janedoe | SKIPPED [no post]`
+  - `[2024-06-07T12:35:10.456Z] [followLikeDmFollowersTarget] user123 | FAILED: 404 Not Found`
+
+## 🚫 Skipping Accounts with 0 Posts
+- If a target account has 0 posts, the script will skip all actions (including follow, like, comment, DM, etc), log the skip, and immediately continue to the next account without delay.
+- Output example: `Skipped @username [no post] (not followed)`
+
 ## ⚠️ Notes
 - Instagram may block or limit automation, especially for story viewing and mass actions.
 - Use Limit mode for safer operation.

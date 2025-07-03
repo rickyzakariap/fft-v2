@@ -1,16 +1,26 @@
 const { IgApiClient } = require('instagram-private-api');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 
 async function igLogin() {
   const ig = new IgApiClient();
-  const username = process.env.IG_USERNAME;
-  const password = process.env.IG_PASSWORD;
-  if (!username || !password) {
-    console.log(chalk.red('Username/password Instagram belum diatur di .env!'));
-    process.exit(1);
-  }
+  console.log(chalk.cyan('\nPlease login to your Instagram account.'));
+  const { username } = await inquirer.prompt([
+    { type: 'input', name: 'username', message: 'Instagram username:', validate: v => v.trim() ? true : 'Username is required!' }
+  ]);
+  const { password } = await inquirer.prompt([
+    { type: 'password', name: 'password', message: 'Instagram password:' }
+  ]);
+
+  // Clean up old device/session if any
+  const deviceFile = path.join(process.cwd(), `.device_${username}.json`);
+  if (fs.existsSync(deviceFile)) fs.unlinkSync(deviceFile);
+
+  // Generate device before login (best practice)
+  ig.state.generateDevice(username);
+
   let loggedIn = false;
   try {
     await ig.account.login(username, password);
@@ -33,14 +43,14 @@ async function igLogin() {
         console.log(chalk.green('2FA login successful!'));
       } catch (err2) {
         console.log(chalk.red('2FA login failed:'), err2.message);
-        process.exit(1);
+        throw err2;
       }
     } else {
       console.log(chalk.red('Login failed:'), err.message);
-      process.exit(1);
+      throw err;
     }
   }
-  if (!loggedIn) process.exit(1);
+  if (!loggedIn) throw new Error('Login failed');
   return ig;
 }
 

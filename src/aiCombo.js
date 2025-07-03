@@ -92,7 +92,7 @@ function generateComment(caption) {
     const now = new Date().getHours();
     if (now < Number(startHour) || now > Number(endHour)) {
       console.log(chalk.yellow(`Current hour (${now}) is outside the allowed range (${startHour}-${endHour}). Script paused.`));
-      process.exit(0);
+      return;
     }
   }
   if (mode === 'continuous') {
@@ -145,12 +145,12 @@ function generateComment(caption) {
     }
   } catch (err) {
     console.log(chalk.red('Failed to get targets:'), err.message);
-    process.exit(1);
+    return;
   }
   if (mode === 'limit') medias = medias.slice(0, Number(jumlah));
   if (!medias.length) {
     console.log(chalk.yellow('No targets found.'));
-    process.exit(0);
+    return;
   }
 
   // Like + comment each post
@@ -165,13 +165,26 @@ function generateComment(caption) {
     }
     process.stdout.write(chalk.cyan(`\n[${i + 1}/${medias.length}] @${media.user.username}: `));
     try {
-      await ig.media.like({ mediaId: media.id, moduleInfo: { module_name: 'feed_timeline' }, d: 0 });
-      const comment = generateComment(media.caption && media.caption.text ? media.caption.text : '');
-      await ig.media.comment({ mediaId: media.id, text: comment });
-      const waktu = moment.unix(media.taken_at).format('YYYY-MM-DD HH:mm:ss');
-      const postUrl = media.code ? `https://www.instagram.com/p/${media.code}` : '-';
-      writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Liked+Commented @${media.user.username} ${postUrl} | "${comment}"`, status: 'SUCCESS' });
-      console.log(chalk.green(`Liked + Commented! (${waktu})`));
+      if (media.user.is_private) {
+        await ig.friendship.create(media.user.pk);
+        console.log(chalk.yellow(`[priv acc] Skipped like+comment for @${media.user.username}`));
+      } else {
+        // Cek postingan user
+        const userFeed = ig.feed.user(media.user.pk);
+        const posts = await userFeed.items();
+        if (!posts || posts.length === 0) {
+          console.log(chalk.yellow(`[no post] Skipped follow+like+comment for @${media.user.username}`));
+        } else {
+          await ig.friendship.create(media.user.pk);
+          await ig.media.like({ mediaId: media.id, moduleInfo: { module_name: 'feed_timeline' }, d: 0 });
+          const comment = generateComment(media.caption && media.caption.text ? media.caption.text : '');
+          await ig.media.comment({ mediaId: media.id, text: comment });
+          const waktu = moment.unix(media.taken_at).format('YYYY-MM-DD HH:mm:ss');
+          const postUrl = media.code ? `https://www.instagram.com/p/${media.code}` : '-';
+          writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Liked+Commented @${media.user.username} ${postUrl} | "${comment}"`, status: 'SUCCESS' });
+          console.log(chalk.green(`Followed + Liked + Commented! (${waktu})`));
+        }
+      }
       success++;
     } catch (err) {
       errorCount++;
@@ -197,5 +210,5 @@ function generateComment(caption) {
   } catch {}
 
   console.log(chalk.cyan('\nFinished AI Combo (like + comment)!'));
-  process.exit(0);
+  return;
 })(); 

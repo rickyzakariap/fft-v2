@@ -1,7 +1,15 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 
-console.log(chalk.cyan('\n=== IG-AUTO MENU UTAMA ===\n'));
+console.log(chalk.cyan('\n=== IG-AUTO MAIN MENU ===\n'));
+
+async function runFeatureScript(script) {
+  try {
+    await require('./' + script)();
+  } catch (err) {
+    console.log(chalk.red('Feature error:'), err && err.message ? err.message : err);
+  }
+}
 
 async function mainMenu() {
   while (true) {
@@ -9,7 +17,7 @@ async function mainMenu() {
       {
         type: 'list',
         name: 'main',
-        message: 'Pilih kategori utama:',
+        message: 'Select main category:',
         choices: [
           { name: 'Follow', value: 'follow' },
           { name: 'Unfollow', value: 'unfollow' },
@@ -29,9 +37,9 @@ async function mainMenu() {
     else if (main === 'story') await storyMenu();
     else if (main === 'massDelete') await massDeleteMenu();
     else if (main === 'about') {
-      console.log(chalk.green('\nIG-AUTO by YourName\nProject automation Instagram.\nGunakan dengan bijak.\n'));
+      console.log(chalk.green('\nIG-AUTO by YourName\nInstagram automation project.\nUse responsibly.\n'));
     } else if (main === 'exit') {
-      console.log(chalk.cyan('Terima kasih telah menggunakan IG-AUTO!'));
+      console.log(chalk.cyan('Thank you for using IG-AUTO!'));
       process.exit(0);
     }
   }
@@ -42,7 +50,7 @@ async function followMenu() {
     {
       type: 'list',
       name: 'follow',
-      message: 'Pilih fitur Follow:',
+      message: 'Select Follow feature:',
       choices: [
         { name: 'Follow Followers Target', value: 'followFollowersTarget' },
         { name: 'Follow + Like Followers Target', value: 'followLikeFollowersTarget' },
@@ -50,23 +58,16 @@ async function followMenu() {
         { name: 'Follow + Like + DM Followers Target', value: 'followLikeDmFollowersTarget' },
         { name: 'Follow + Like + Comment by Hashtag', value: 'followLikeCommentByHashtag' },
         { name: 'Follow + Like + Comment by Location', value: 'followLikeCommentByLocation' },
-        { name: 'Kembali', value: 'back' }
+        { name: 'Back', value: 'back' }
       ]
     }
   ]);
-  if (follow === 'followFollowersTarget') {
-    try { await require('./follow'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (follow === 'followLikeFollowersTarget') {
-    try { await require('./autolikeByFollowers'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (follow === 'followLikeCommentFollowersTarget') {
-    try { await require('./aiCombo'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (follow === 'followLikeDmFollowersTarget') {
-    try { await require('./followLikeDmFollowersTarget'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (follow === 'followLikeCommentByHashtag') {
-    try { await require('./commentByHashtag'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (follow === 'followLikeCommentByLocation') {
-    try { await require('./followLikeCommentByLocation'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  }
+  if (follow === 'followFollowersTarget') await runFeatureScript('follow.js');
+  else if (follow === 'followLikeFollowersTarget') await runFeatureScript('autolikeByFollowers.js');
+  else if (follow === 'followLikeCommentFollowersTarget') await runFeatureScript('aiCombo.js');
+  else if (follow === 'followLikeDmFollowersTarget') await runFeatureScript('followLikeDmFollowersTarget.js');
+  else if (follow === 'followLikeCommentByHashtag') await runFeatureScript('commentByHashtag.js');
+  else if (follow === 'followLikeCommentByLocation') await runFeatureScript('followLikeCommentByLocation.js');
 }
 
 async function unfollowMenu() {
@@ -74,19 +75,16 @@ async function unfollowMenu() {
     {
       type: 'list',
       name: 'unfollow',
-      message: 'Pilih fitur Unfollow:',
+      message: 'Select Unfollow feature:',
       choices: [
         { name: 'Unfollow All Following', value: 'unfollowAll' },
         { name: 'Unfollow Not Followback', value: 'unfollowNotFollowback' },
-        { name: 'Kembali', value: 'back' }
+        { name: 'Back', value: 'back' }
       ]
     }
   ]);
-  if (unfollow === 'unfollowAll') {
-    try { await require('./unfollow'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (unfollow === 'unfollowNotFollowback') {
-    try { await require('./unfollowNotFollowback'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  }
+  if (unfollow === 'unfollowAll') await runFeatureScript('unfollow.js');
+  else if (unfollow === 'unfollowNotFollowback') await runFeatureScript('unfollowNotFollowback.js');
 }
 
 async function likeMenu() {
@@ -94,19 +92,16 @@ async function likeMenu() {
     {
       type: 'list',
       name: 'like',
-      message: 'Pilih fitur Like:',
+      message: 'Select Like feature:',
       choices: [
         { name: 'Bot Like Timeline', value: 'likeTimeline' },
         { name: 'Bot Like Target User', value: 'likeTarget' },
-        { name: 'Kembali', value: 'back' }
+        { name: 'Back', value: 'back' }
       ]
     }
   ]);
-  if (like === 'likeTimeline') {
-    try { await require('./autolikeByFollowers'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  } else if (like === 'likeTarget') {
-    try { await require('./likeByHashtag'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  }
+  if (like === 'likeTimeline') await runFeatureScript('autolikeByFollowers.js');
+  else if (like === 'likeTarget') await runFeatureScript('likeByHashtag.js');
 }
 
 async function commentMenu() {
@@ -114,16 +109,14 @@ async function commentMenu() {
     {
       type: 'list',
       name: 'comment',
-      message: 'Pilih fitur Comment:',
+      message: 'Select Comment feature:',
       choices: [
         { name: 'Like + Comment Followers Target', value: 'likeCommentFollowersTarget' },
-        { name: 'Kembali', value: 'back' }
+        { name: 'Back', value: 'back' }
       ]
     }
   ]);
-  if (comment === 'likeCommentFollowersTarget') {
-    try { await require('./aiCombo'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  }
+  if (comment === 'likeCommentFollowersTarget') await runFeatureScript('aiCombo.js');
 }
 
 async function storyMenu() {
@@ -131,16 +124,14 @@ async function storyMenu() {
     {
       type: 'list',
       name: 'story',
-      message: 'Pilih fitur Story:',
+      message: 'Select Story feature:',
       choices: [
         { name: 'Mass Story View', value: 'massStoryView' },
-        { name: 'Kembali', value: 'back' }
+        { name: 'Back', value: 'back' }
       ]
     }
   ]);
-  if (story === 'massStoryView') {
-    try { await require('./viewStory'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  }
+  if (story === 'massStoryView') await runFeatureScript('viewStory.js');
 }
 
 async function massDeleteMenu() {
@@ -148,16 +139,14 @@ async function massDeleteMenu() {
     {
       type: 'list',
       name: 'del',
-      message: 'Pilih fitur Mass Delete:',
+      message: 'Select Mass Delete feature:',
       choices: [
         { name: 'Mass Delete Post/Photo', value: 'massDelete' },
-        { name: 'Kembali', value: 'back' }
+        { name: 'Back', value: 'back' }
       ]
     }
   ]);
-  if (del === 'massDelete') {
-    try { await require('./massDelete'); } catch { console.log(chalk.yellow('Coming soon!')); }
-  }
+  if (del === 'massDelete') await runFeatureScript('massDelete.js');
 }
 
 mainMenu(); 
