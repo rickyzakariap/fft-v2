@@ -87,6 +87,11 @@ module.exports = async function() {
           writeFollowLog(user.username, 'FOLLOWED');
         }
       } catch (err) {
+        if (err && err.message && err.message.includes('404')) {
+          console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));
+          writeFollowLog(user.username, 'SKIPPED [404 Not Found]');
+          continue; // skip delay
+        }
         console.log(chalk.red(`Failed to follow @${user.username}: ${err.message}`));
         writeFollowLog(user.username, `FAILED: ${err.message}`);
       }

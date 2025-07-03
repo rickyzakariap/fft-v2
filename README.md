@@ -1,6 +1,72 @@
-# 🤖 Instagram Automation Tool
+# IG-AUTO: Instagram Automation Project
 
-A simple, script-per-feature Instagram automation tool (toolsig/docs style).
+## Overview
+IG-AUTO is a modular Node.js project for automating Instagram actions such as follow, like, comment, story view, and more. All features are implemented as async functions and are accessible via a user-friendly main menu. No credentials are stored in code, and login uses inquirer with hidden password input.
+
+## Features
+- **Follow Features:**
+  - Follow, Follow+Like, Follow+Like+Comment, Follow+Like+DM, and Follow+Like+Comment by hashtag/location.
+  - Skips private accounts for like/comment/DM, but still follows (outputs `[priv acc]`).
+  - Skips all actions (including follow) for accounts with 0 posts (outputs `[no post]`).
+  - Robust error handling and user feedback in English.
+  - Random delay between actions, with user-specified min/max.
+  - All actions are logged to `logs/actions.log` with format `[timestamp] [feature] username | status`.
+  - 404 errors (user not found) are logged and skipped without delay.
+
+- **Like Features:**
+  - Like by Hashtag and Like by Target User.
+  - Implements skip logic, logging, delay, and error handling as above.
+
+- **Comment Features:**
+  - Comment by Hashtag allows input of one or multiple comments (randomized per target).
+  - Implements skip logic, logging, delay, and error handling as above.
+
+- **AI Combo:**
+  - Like + humanized comment with language detection and random templates.
+
+- **Story Viewer:**
+  - View or view+love stories, with target source options (following, followers target, hashtag).
+  - Skip logic, logging, and random delay (5-10s) between stories of the same user, and recommended delay (60-120s) between users.
+  - Robust error handling, including library-level errors.
+
+- **Unfollow, Mass Delete, and some comment-only features:**
+  - Currently stubs or under development. Suggestions for implementation are welcome.
+
+## Logging
+All actions are logged to `logs/actions.log` in the format:
+```
+[timestamp] [feature] username | status
+```
+
+## Error Handling
+- Comprehensive try/catch blocks and specific handling for Instagram API errors (404, 400, etc.).
+- User-friendly error messages in English.
+- Debug logs are removed from production code.
+
+## User Experience
+- All prompts and outputs are in English.
+- Password input is invisible.
+- Delay and count options for all relevant features.
+- Clean, user-friendly output.
+
+## Usage
+1. Clone the repository and install dependencies:
+   ```
+   git clone <repo-url>
+   cd ig-auto
+   npm install
+   ```
+2. Run the main script:
+   ```
+   node src/main.js
+   ```
+3. Follow the prompts to select features and options.
+
+## Contribution
+Feel free to open issues or pull requests for new features, bug fixes, or suggestions.
+
+## License
+MIT
 
 ## 🚀 Features
 

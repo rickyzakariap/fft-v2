@@ -72,6 +72,11 @@ module.exports = async function() {
           writeActionLog('autolikeByFollowers', user.username, 'FOLLOWED & LIKED');
         }
       } catch (err) {
+        if (err && err.message && err.message.includes('404')) {
+          console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));
+          writeActionLog('autolikeByFollowers', user.username, 'SKIPPED [404 Not Found]');
+          continue; // skip delay
+        }
         console.log(chalk.red(`Failed for @${user.username}: ${err.message}`));
         writeActionLog('autolikeByFollowers', user.username, `FAILED: ${err.message}`);
       }

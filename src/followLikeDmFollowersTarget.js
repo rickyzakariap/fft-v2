@@ -89,6 +89,11 @@ module.exports = async function() {
           writeActionLog('followLikeDmFollowersTarget', user.username, 'FOLLOWED & LIKED & DM (stub)');
         }
       } catch (err) {
+        if (err && err.message && err.message.includes('404')) {
+          console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));
+          writeActionLog('followLikeDmFollowersTarget', user.username, 'SKIPPED [404 Not Found]');
+          continue; // skip delay
+        }
         console.log(chalk.red(`Failed for @${user.username}: ${err.message}`));
         writeActionLog('followLikeDmFollowersTarget', user.username, `FAILED: ${err.message}`);
       }

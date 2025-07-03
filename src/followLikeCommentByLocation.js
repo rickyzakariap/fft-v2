@@ -69,7 +69,7 @@ module.exports = async function() {
       if (followCount > 0 && count >= followCount) break;
       const media = medias[i];
       const user = media.user;
-      if (!user) continue;
+      if (!user || !user.pk) continue;
       try {
         // Cek postingan user
         const userFeed = ig.feed.user(user.pk);
@@ -91,6 +91,11 @@ module.exports = async function() {
           writeActionLog('followLikeCommentByLocation', user.username, 'FOLLOWED & LIKED & COMMENTED');
         }
       } catch (err) {
+        if (err && err.message && err.message.includes('404')) {
+          console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));
+          writeActionLog('followLikeCommentByLocation', user.username, 'SKIPPED [404 Not Found]');
+          continue; // skip delay
+        }
         console.log(chalk.red(`Failed for @${user.username}: ${err.message}`));
         writeActionLog('followLikeCommentByLocation', user.username, `FAILED: ${err.message}`);
       }
