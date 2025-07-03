@@ -1,7 +1,19 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 
-console.log(chalk.cyan('\n=== IG-AUTO MAIN MENU ===\n'));
+// ASCII Art Logo
+console.log(chalk.cyan(`
+░▒▓████████▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░  
+░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░ 
+░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░    ░▒▓█▓▒▒▓█▓▒░       ░▒▓█▓▒░ 
+░▒▓██████▓▒░ ░▒▓██████▓▒░    ░▒▓█▓▒░    ░▒▓█▓▒▒▓█▓▒░ ░▒▓██████▓▒░  
+░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░     ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        
+░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░     ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        
+░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░      ░▒▓██▓▒░  ░▒▓████████▓▒░ 
+`));
+console.log(chalk.cyan('by rickyzakariap\n'));
+
+console.log(chalk.cyan('\n=== INSTAGRAM TOOLS MAIN MENU ===\n'));
 
 async function runFeatureScript(script) {
   try {
@@ -37,9 +49,9 @@ async function mainMenu() {
     else if (main === 'story') await storyMenu();
     else if (main === 'massDelete') await massDeleteMenu();
     else if (main === 'about') {
-      console.log(chalk.green('\nIG-AUTO by YourName\nInstagram automation project.\nUse responsibly.\n'));
+      console.log(chalk.green('\nInstagram Tools by rickyzakariap\nGeneral-purpose Instagram automation toolkit.\nUse responsibly.\n'));
     } else if (main === 'exit') {
-      console.log(chalk.cyan('Thank you for using IG-AUTO!'));
+      console.log(chalk.cyan('Thank you for using Instagram Tools!'));
       process.exit(0);
     }
   }
