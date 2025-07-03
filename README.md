@@ -9,74 +9,132 @@
 by rickyzakariap
 ```
 
-# IG-AUTO: Instagram Automation Project
+# Instagram Tools: General-Purpose Instagram Automation
 
 ## Overview
-IG-AUTO is a modular Node.js project for automating Instagram actions such as follow, like, comment, story view, and more. All features are implemented as async functions and are accessible via a user-friendly main menu. No credentials are stored in code, and login uses inquirer with hidden password input.
+Instagram Tools is a modular Node.js project for automating Instagram actions such as follow, unfollow, like, comment, story view, and mass delete. All features are accessible via a user-friendly main menu. No credentials are stored in code, and login uses inquirer with hidden password input and 2FA support.
 
-## Features
-- **Follow Features:**
-  - Follow, Follow+Like, Follow+Like+Comment, Follow+Like+DM, and Follow+Like+Comment by hashtag/location.
-  - Skips private accounts for like/comment/DM, but still follows (outputs `[priv acc]`).
-  - Skips all actions (including follow) for accounts with 0 posts (outputs `[no post]`).
-  - Robust error handling and user feedback in English.
-  - Random delay between actions, with user-specified min/max.
-  - All actions are logged to `logs/actions.log` with format `[timestamp] [feature] username | status`.
-  - 404 errors (user not found) are logged and skipped without delay.
+---
 
-- **Like Features:**
-  - Like by Hashtag and Like by Target User.
-  - Implements skip logic, logging, delay, and error handling as above.
+## ✨ Features
 
-- **Comment Features:**
-  - Comment by Hashtag allows input of one or multiple comments (randomized per target).
-  - Implements skip logic, logging, delay, and error handling as above.
+- **Follow**
+  - Follow followers of a target, by hashtag, or by location.
+  - Follow + Like, Follow + Like + Comment, Follow + Like + DM, and more.
+  - Skip private accounts for like/comment/DM, but still follow (outputs `[priv acc]`).
+  - Skip all actions for accounts with 0 posts (outputs `[no post]`).
+  - User-defined random delay and count/continuous mode.
+  - Robust error handling and logging.
 
-- **AI Combo:**
+- **Unfollow**
+  - **Unfollow by Criteria:** Unfollow following based on:
+    - Inactive (no post in X months)
+    - No profile picture
+    - Followers/following below/above threshold
+    - Private/Public account
+    - Username contains keyword
+    - Whitelist support
+  - **Unfollow Not Followback:** Unfollow users who do not follow you back.
+  - All with user-defined delay, count/continuous mode, and logging.
+
+- **Like**
+  - Like by followers target, by hashtag, or by target user.
+  - User-defined delay, skip logic, and logging.
+
+- **Comment**
+  - Comment by hashtag or target, with randomization and language detection.
+  - User-defined delay and logging.
+
+- **Story Viewer**
+  - View or view+love stories from following, followers target, or hashtag.
+  - Random delay (5-10s) between stories, 60-120s between users.
+  - Robust error handling and logging.
+
+- **Mass Delete**
+  - (In development) Mass delete posts/photos with confirmation and logging.
+
+- **AI Combo**
   - Like + humanized comment with language detection and random templates.
 
-- **Story Viewer:**
-  - View or view+love stories, with target source options (following, followers target, hashtag).
-  - Skip logic, logging, and random delay (5-10s) between stories of the same user, and recommended delay (60-120s) between users.
-  - Robust error handling, including library-level errors.
+- **Universal Logging**
+  - All actions are logged to `logs/actions.log` in the format:
+    ```
+    [YYYY-MM-DDTHH:mm:ss.sssZ] [feature] username | status
+    ```
 
-- **Unfollow, Mass Delete, and some comment-only features:**
-  - Currently stubs or under development. Suggestions for implementation are welcome.
+- **2FA Support**
+  - All login flows support Two-Factor Authentication (OTP prompt if needed).
 
-## Logging
-All actions are logged to `logs/actions.log` in the format:
+---
+
+## 🖥️ Main Menu Example
 ```
-[timestamp] [feature] username | status
+? Select main category:
+❯ Follow
+  Unfollow
+  Like
+  Comment
+  Story
+  Mass Delete
+  Information / About
+  Exit
 ```
 
-## Error Handling
-- Comprehensive try/catch blocks and specific handling for Instagram API errors (404, 400, etc.).
-- User-friendly error messages in English.
-- Debug logs are removed from production code.
-
-## User Experience
-- All prompts and outputs are in English.
-- Password input is invisible.
-- Delay and count options for all relevant features.
-- Clean, user-friendly output.
-
-## Usage
-1. Clone the repository and install dependencies:
-   ```
+## 🧭 Usage
+1. **Clone the repository and install dependencies:**
+   ```bash
    git clone <repo-url>
    cd ig-auto
    npm install
    ```
-2. Run the main script:
-   ```
+2. **Run the main script:**
+   ```bash
    node src/main.js
    ```
-3. Follow the prompts to select features and options.
+3. **Follow the prompts to select features and options.**
 
-## Contribution
+---
+
+## ⚙️ Feature Details
+
+### Unfollow by Criteria
+- Pilih satu atau lebih kriteria (inactive, no profile pic, followers/following, private/public, keyword, whitelist).
+- Prompt jumlah maksimal, delay min/max, dan mode continuous.
+- Semua aksi dicatat ke log.
+
+### Unfollow Not Followback
+- Unfollow semua akun yang tidak follow back.
+- Prompt jumlah maksimal, delay min/max, dan mode continuous.
+- Semua aksi dicatat ke log.
+
+### Mass Delete (Coming Soon)
+- Akan menghapus banyak postingan sekaligus, dengan filter dan konfirmasi.
+
+### Follow, Like, Comment, Story
+- Semua fitur memiliki prompt jumlah, delay min/max, mode limit/continuous, skip logic, dan logging.
+- Semua output user-friendly dan error handling robust.
+
+---
+
+## 📄 Logging Example
+```
+[2024-06-07T12:34:56.789Z] [follow] johndoe | FOLLOWED
+[2024-06-07T12:35:01.123Z] [unfollow] janedoe | UNFOLLOWED
+[2024-06-07T12:35:10.456Z] [like] user123 | SKIPPED [no post]
+```
+
+---
+
+## ⚠️ Notes
+- Instagram may block or limit automation, especially for story viewing and mass actions.
+- Use continuous mode with caution (higher risk of action block).
+- All prompts and outputs are in English.
+- Password input is invisible.
+
+## 🤝 Contribution
 Feel free to open issues or pull requests for new features, bug fixes, or suggestions.
 
-## License
+## 📝 License
 MIT
 
 ## 🚀 Features
