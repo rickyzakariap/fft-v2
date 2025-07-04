@@ -190,11 +190,13 @@ module.exports = async function() {
         deletedCount++;
         
         // Log the action
+        const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
         logAction('MASS_DELETE', {
           post_id: post.id,
           caption: post.caption?.text?.substring(0, 100) || 'No caption',
           likes: post.like_count,
-          date: date
+          date: date,
+          url: postUrl
         });
         
         console.log(chalk.green(`✓ Deleted successfully`));

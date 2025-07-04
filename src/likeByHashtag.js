@@ -83,8 +83,9 @@ module.exports = async function() {
           continue; // skip delay
         }
         await ig.media.like({ mediaId: media.id, moduleInfo: { module_name: 'feed_timeline' }, d: 0 });
-        console.log(chalk.green(`Liked post by @${user.username}`));
-        writeActionLog('likeByHashtag', user.username, 'LIKED');
+        const postUrl = media.code ? `https://www.instagram.com/p/${media.code}/` : '-';
+        console.log(chalk.green(`Liked post by @${user.username} (${postUrl})`));
+        writeActionLog('likeByHashtag', user.username, `LIKED | ${postUrl}`);
       } catch (err) {
         if (err && err.message && err.message.includes('404')) {
           console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));

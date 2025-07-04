@@ -180,8 +180,8 @@ function generateComment(caption) {
           const comment = generateComment(media.caption && media.caption.text ? media.caption.text : '');
           await ig.media.comment({ mediaId: media.id, text: comment });
           const waktu = moment.unix(media.taken_at).format('YYYY-MM-DD HH:mm:ss');
-          const postUrl = media.code ? `https://www.instagram.com/p/${media.code}` : '-';
-          writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Liked+Commented @${media.user.username} ${postUrl} | "${comment}"`, status: 'SUCCESS' });
+          const postUrl = media.code ? `https://www.instagram.com/p/${media.code}/` : '-';
+          writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Liked+Commented @${media.user.username} ${postUrl} | "${comment}"`, status: 'SUCCESS', url: postUrl });
           console.log(chalk.green(`Followed + Liked + Commented! (${waktu})`));
         }
       }

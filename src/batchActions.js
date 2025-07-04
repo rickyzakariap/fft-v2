@@ -251,11 +251,13 @@ class BatchActions {
               });
               likedCount++;
               
+              const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
               logAction('BATCH_LIKE', {
                 account: account.username,
                 post_id: post.id,
                 author: post.user.username,
-                hashtag: hashtag
+                hashtag: hashtag,
+                url: postUrl
               });
               
               console.log(chalk.green(`✓ Liked post by @${post.user.username}`));

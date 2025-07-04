@@ -39,7 +39,7 @@ class AccountManager {
   async addAccount() {
     console.log(chalk.cyan('\n=== ADD NEW ACCOUNT ===\n'));
     
-    const { username, password, nickname } = await inquirer.prompt([
+    const { username, password, nickname, proxy } = await inquirer.prompt([
       {
         type: 'input',
         name: 'username',
@@ -56,6 +56,12 @@ class AccountManager {
         name: 'nickname',
         message: 'Account nickname (optional):',
         default: (answers) => answers.username
+      },
+      {
+        type: 'input',
+        name: 'proxy',
+        message: 'Proxy (optional, e.g. http://user:pass@host:port):',
+        default: ''
       }
     ]);
 
@@ -70,6 +76,7 @@ class AccountManager {
     try {
       const ig = new IgApiClient();
       ig.state.generateDevice(username);
+      if (proxy) ig.state.proxyUrl = proxy;
       
       await ig.account.login(username, password);
       
@@ -80,6 +87,7 @@ class AccountManager {
         username,
         password: this.encryptPassword(password),
         nickname,
+        proxy,
         fullName: accountInfo.full_name,
         followers: accountInfo.follower_count,
         following: accountInfo.following_count,
@@ -92,6 +100,7 @@ class AccountManager {
       
       console.log(chalk.green(`✓ Account "${nickname}" added successfully!`));
       console.log(chalk.gray(`Followers: ${accountInfo.follower_count} | Following: ${accountInfo.following_count} | Posts: ${accountInfo.media_count}`));
+      if (proxy) console.log(chalk.gray(`Proxy: ${proxy}`));
       
     } catch (error) {
       console.log(chalk.red('Login failed:'), error.message);
@@ -195,6 +204,7 @@ class AccountManager {
       console.log(chalk.white(`${index + 1}. ${account.nickname} (@${account.username})`));
       console.log(chalk.gray(`   Full Name: ${account.fullName}`));
       console.log(chalk.gray(`   Followers: ${account.followers} | Following: ${account.following} | Posts: ${account.posts}`));
+      if (account.proxy) console.log(chalk.gray(`   Proxy: ${account.proxy}`));
       console.log(chalk.gray(`   Added: ${new Date(account.addedAt).toLocaleDateString()}`));
       console.log('');
     });
