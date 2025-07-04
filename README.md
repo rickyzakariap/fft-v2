@@ -44,7 +44,7 @@ A modular Node.js toolkit for automating Instagram actions: follow, unfollow, li
 ## Usage
 1. **Install:**
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/rickyzakariap/fft-v2
    cd ig-auto
    npm install
    ```
