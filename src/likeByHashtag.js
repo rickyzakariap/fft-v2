@@ -1,17 +1,11 @@
 const chalk = require('chalk');
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
-const fs = require('fs');
+const { writeLog } = require('./logger');
 const path = require('path');
 
 function randomDelay(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function writeActionLog(feature, username, status) {
-  const waktu = new Date().toISOString();
-  const logLine = `[${waktu}] [${feature}] ${username} | ${status}\n`;
-  fs.appendFileSync(path.join(__dirname, '../logs/actions.log'), logLine);
 }
 
 module.exports = async function() {
@@ -79,21 +73,21 @@ module.exports = async function() {
         const posts = await userFeed.items();
         if (!posts || posts.length === 0) {
           console.log(chalk.yellow(`Skipped @${user.username} [no post] (not liked)`));
-          writeActionLog('likeByHashtag', user.username, 'SKIPPED [no post]');
+          writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: user.username, detail: 'SKIPPED [no post]', status: 'SKIPPED' });
           continue; // skip delay
         }
         await ig.media.like({ mediaId: media.id, moduleInfo: { module_name: 'feed_timeline' }, d: 0 });
         const postUrl = media.code ? `https://www.instagram.com/p/${media.code}/` : '-';
         console.log(chalk.green(`Liked post by @${user.username} (${postUrl})`));
-        writeActionLog('likeByHashtag', user.username, `LIKED | ${postUrl}`);
+        writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: user.username, detail: `LIKED`, status: 'SUCCESS', url: postUrl });
       } catch (err) {
         if (err && err.message && err.message.includes('404')) {
           console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));
-          writeActionLog('likeByHashtag', user.username, 'SKIPPED [404 Not Found]');
+          writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: user.username, detail: 'SKIPPED [404 Not Found]', status: 'SKIPPED' });
           continue; // skip delay
         }
         console.log(chalk.red(`Failed to like @${user.username}: ${err.message}`));
-        writeActionLog('likeByHashtag', user.username, `FAILED: ${err.message}`);
+        writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: user.username, detail: `FAILED: ${err.message}`, status: 'FAILED' });
       }
       count++;
       if ((likeCount === 0 || count < likeCount) && i < medias.length - 1) {
@@ -105,6 +99,7 @@ module.exports = async function() {
     console.log(chalk.cyan(`\nDone! Liked ${count} posts from hashtag #${hashtag}.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in likeByHashtag.js:'), err && err.message ? err.message : err);
+    writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: '-', detail: `FATAL: ${err.message}`, status: 'FATAL' });
     throw err;
   }
 }; 

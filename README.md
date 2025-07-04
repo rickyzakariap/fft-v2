@@ -59,7 +59,14 @@ A modular Node.js toolkit for automating Instagram actions: follow, unfollow, li
 ## Logging
 All actions are logged to `logs/actions.log`:
 ```
-[YYYY-MM-DDTHH:mm:ss.sssZ] [feature] username | status
+[YYYY-MM-DDTHH:mm:ss.sssZ] [FEATURE] username | detail | https://www.instagram.com/p/POSTCODE/ | status
+```
+- For like, comment, and mass delete actions, the log includes a direct link to the Instagram post.
+- Example:
+```
+[2024-07-01T10:00:00.000Z] [LIKE_BY_HASHTAG] myuser | LIKED | https://www.instagram.com/p/ABC123xyz/ | SUCCESS
+[2024-07-01T10:01:00.000Z] [MASS_DELETE] myuser | Deleted post 123456 | https://www.instagram.com/p/DEF456uvw/ | SUCCESS
+[2024-07-01T10:02:00.000Z] [AI_COMBO] myuser | Liked+Commented @targetuser https://www.instagram.com/p/GHI789rst/ | SUCCESS
 ```
 
 ---

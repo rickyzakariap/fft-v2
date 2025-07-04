@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const AccountManager = require('./accountManager');
-const { logAction } = require('./logger');
+const { writeLog } = require('./logger');
 
 class BatchActions {
   constructor() {
@@ -66,10 +66,12 @@ class BatchActions {
               await ig.friendship.create(follower.pk);
               followedCount++;
               
-              logAction('BATCH_FOLLOW', {
-                account: account.username,
-                target: follower.username,
-                follower_count: follower.follower_count
+              writeLog({
+                waktu: new Date().toISOString(),
+                feature: 'BATCH_FOLLOW',
+                user: account.username,
+                detail: `Followed @${follower.username}`,
+                status: 'SUCCESS'
               });
               
               console.log(chalk.green(`✓ Followed @${follower.username}`));
@@ -80,6 +82,13 @@ class BatchActions {
             }
           } catch (error) {
             console.log(chalk.red(`✗ Failed to follow @${follower.username}: ${error.message}`));
+            writeLog({
+              waktu: new Date().toISOString(),
+              feature: 'BATCH_FOLLOW',
+              user: account.username,
+              detail: `FAILED to follow @${follower.username}: ${error.message}`,
+              status: 'FAILED'
+            });
           }
         }
         
@@ -166,10 +175,12 @@ class BatchActions {
             await ig.friendship.destroy(user.pk);
             unfollowedCount++;
             
-            logAction('BATCH_UNFOLLOW', {
-              account: account.username,
-              target: user.username,
-              follower_count: user.follower_count
+            writeLog({
+              waktu: new Date().toISOString(),
+              feature: 'BATCH_UNFOLLOW',
+              user: account.username,
+              detail: `Unfollowed @${user.username}`,
+              status: 'SUCCESS'
             });
             
             console.log(chalk.green(`✓ Unfollowed @${user.username}`));
@@ -179,6 +190,13 @@ class BatchActions {
             }
           } catch (error) {
             console.log(chalk.red(`✗ Failed to unfollow @${user.username}: ${error.message}`));
+            writeLog({
+              waktu: new Date().toISOString(),
+              feature: 'BATCH_UNFOLLOW',
+              user: account.username,
+              detail: `FAILED to unfollow @${user.username}: ${error.message}`,
+              status: 'FAILED'
+            });
           }
         }
         
@@ -252,11 +270,12 @@ class BatchActions {
               likedCount++;
               
               const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
-              logAction('BATCH_LIKE', {
-                account: account.username,
-                post_id: post.id,
-                author: post.user.username,
-                hashtag: hashtag,
+              writeLog({
+                waktu: new Date().toISOString(),
+                feature: 'BATCH_LIKE',
+                user: account.username,
+                detail: `Liked post by @${post.user.username}`,
+                status: 'SUCCESS',
                 url: postUrl
               });
               
@@ -268,6 +287,14 @@ class BatchActions {
             }
           } catch (error) {
             console.log(chalk.red(`✗ Failed to like post: ${error.message}`));
+            writeLog({
+              waktu: new Date().toISOString(),
+              feature: 'BATCH_LIKE',
+              user: account.username,
+              detail: `FAILED to like post by @${post.user.username}: ${error.message}`,
+              status: 'FAILED',
+              url: postUrl
+            });
           }
         }
         

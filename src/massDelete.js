@@ -1,7 +1,7 @@
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const { logAction } = require('./logger');
+const { writeLog } = require('./logger');
 
 module.exports = async function() {
   console.log(chalk.cyan('\n=== MASS DELETE POSTS/PHOTOS ===\n'));
@@ -191,11 +191,12 @@ module.exports = async function() {
         
         // Log the action
         const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
-        logAction('MASS_DELETE', {
-          post_id: post.id,
-          caption: post.caption?.text?.substring(0, 100) || 'No caption',
-          likes: post.like_count,
-          date: date,
+        writeLog({
+          waktu: new Date().toISOString(),
+          feature: 'MASS_DELETE',
+          user: ig.state?.username || '-',
+          detail: `Deleted post ${post.id} | ${post.caption?.text?.substring(0, 100) || 'No caption'}`,
+          status: 'SUCCESS',
           url: postUrl
         });
         
@@ -212,9 +213,13 @@ module.exports = async function() {
         console.log(chalk.red(`✗ Failed to delete: ${error.message}`));
         
         // Log error
-        logAction('MASS_DELETE_ERROR', {
-          post_id: post.id,
-          error: error.message
+        writeLog({
+          waktu: new Date().toISOString(),
+          feature: 'MASS_DELETE_ERROR',
+          user: ig.state?.username || '-',
+          detail: `Failed to delete post ${post.id}: ${error.message}`,
+          status: 'FAILED',
+          url: postUrl
         });
       }
     }
@@ -227,6 +232,6 @@ module.exports = async function() {
     
   } catch (error) {
     console.log(chalk.red('Mass delete failed:'), error.message);
-    logAction('MASS_DELETE_ERROR', { error: error.message });
+    writeLog({ waktu: new Date().toISOString(), feature: 'MASS_DELETE_ERROR', user: ig.state?.username || '-', detail: `FATAL: ${error.message}`, status: 'FATAL' });
   }
 }; 
