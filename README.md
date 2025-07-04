@@ -65,7 +65,7 @@ All actions are logged to `logs/actions.log`:
 ---
 
 ## Contribution
-Pull requests and issues are welcome!
+Pull requests and issues are welcome!!
 
 ## License
 MIT
