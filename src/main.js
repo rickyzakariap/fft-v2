@@ -37,6 +37,7 @@ async function mainMenu() {
           { name: 'Comment', value: 'comment' },
           { name: 'Story', value: 'story' },
           { name: 'Mass Delete', value: 'massDelete' },
+          { name: 'Multi-Account', value: 'multiAccount' },
           { name: 'Information / About', value: 'about' },
           { name: 'Exit', value: 'exit' }
         ]
@@ -48,6 +49,7 @@ async function mainMenu() {
     else if (main === 'comment') await commentMenu();
     else if (main === 'story') await storyMenu();
     else if (main === 'massDelete') await massDeleteMenu();
+    else if (main === 'multiAccount') await multiAccountMenu();
     else if (main === 'about') {
       console.log(chalk.green('\nInstagram Tools by rickyzakariap\nGeneral-purpose Instagram automation toolkit.\nUse responsibly.\n'));
     } else if (main === 'exit') {
@@ -159,6 +161,59 @@ async function massDeleteMenu() {
     }
   ]);
   if (del === 'massDelete') await runFeatureScript('massDelete.js');
+}
+
+async function multiAccountMenu() {
+  const AccountManager = require('./accountManager');
+  const BatchActions = require('./batchActions');
+  
+  const accountManager = new AccountManager();
+  const batchActions = new BatchActions();
+  
+  const { multiAccount } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'multiAccount',
+      message: 'Select Multi-Account feature:',
+      choices: [
+        { name: 'Manage Accounts', value: 'manage' },
+        { name: 'Batch Follow', value: 'batchFollow' },
+        { name: 'Batch Unfollow', value: 'batchUnfollow' },
+        { name: 'Batch Like', value: 'batchLike' },
+        { name: 'Back', value: 'back' }
+      ]
+    }
+  ]);
+  
+  if (multiAccount === 'manage') await accountManagementMenu(accountManager);
+  else if (multiAccount === 'batchFollow') await batchActions.batchFollow();
+  else if (multiAccount === 'batchUnfollow') await batchActions.batchUnfollow();
+  else if (multiAccount === 'batchLike') await batchActions.batchLike();
+}
+
+async function accountManagementMenu(accountManager) {
+  const { manage } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'manage',
+      message: 'Select account management action:',
+      choices: [
+        { name: 'Add Account', value: 'add' },
+        { name: 'Remove Account', value: 'remove' },
+        { name: 'Show Accounts', value: 'show' },
+        { name: 'Update Account Info', value: 'update' },
+        { name: 'Back', value: 'back' }
+      ]
+    }
+  ]);
+  
+  if (manage === 'add') await accountManager.addAccount();
+  else if (manage === 'remove') await accountManager.removeAccount();
+  else if (manage === 'show') await accountManager.showAccounts();
+  else if (manage === 'update') {
+    const account = await accountManager.selectAccount();
+    if (account) await accountManager.updateAccountInfo(account);
+  }
 }
 
 mainMenu(); 

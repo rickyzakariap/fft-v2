@@ -16,6 +16,8 @@ A modular Node.js toolkit for automating Instagram actions: follow, unfollow, li
 ---
 
 ## Features
+
+### Core Actions
 - **Follow:** Target by followers, hashtag, or location. Includes Follow+Like, Follow+Comment, and more. Skips private/0-post accounts as needed.
 - **Unfollow:**
   - By criteria: inactive, no profile pic, follower/following thresholds, private/public, username keyword, whitelist.
@@ -23,8 +25,16 @@ A modular Node.js toolkit for automating Instagram actions: follow, unfollow, li
 - **Like:** By followers, hashtag, or target user.
 - **Comment:** By hashtag or target, with randomization and language detection.
 - **Story Viewer:** View or love stories from following, followers, or hashtag.
-- **Mass Delete:** (WIP) Delete multiple posts/photos at once.
+
+### Advanced Features
+- **Mass Delete:** Delete multiple posts with filtering by date, caption keywords, engagement, or count.
+- **Multi-Account Support:** 
+  - Manage multiple Instagram accounts
+  - Batch follow/unfollow/like across accounts
+  - Account info tracking and updates
 - **AI Combo:** Like + humanized comment.
+
+### System Features
 - **Universal Logging:** All actions logged to `logs/actions.log`.
 - **Custom Delay & Count:** User-defined random delay and limit/continuous mode.
 - **2FA:** Two-Factor Authentication supported.
