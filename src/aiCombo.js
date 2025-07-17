@@ -1,11 +1,9 @@
 const { igLogin } = require('./login');
-const { writeLog } = require('./logger');
-const { randomDelay, detectLang } = require('./utils');
+const { writeLog, writeErrorLog } = require('./logger');
+const { randomInRange, detectLang } = require('./utils');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const moment = require('moment');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
 const templates = {
@@ -61,6 +59,10 @@ function generateComment(caption) {
   const arr = templates[lang] || templates.en;
   const idx = Math.floor(Math.random() * arr.length);
   return arr[idx](caption);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 (async () => {
@@ -145,6 +147,7 @@ function generateComment(caption) {
     }
   } catch (err) {
     console.log(chalk.red('Failed to get targets:'), err.message);
+    writeErrorLog('aiCombo', '-', err);
     return;
   }
   if (mode === 'limit') medias = medias.slice(0, Number(jumlah));
@@ -191,6 +194,7 @@ function generateComment(caption) {
       const waktu = moment().format('YYYY-MM-DD HH:mm:ss');
       writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Failed like+comment @${media.user.username}`, status: 'FAILED' });
       console.log(chalk.red('Failed like+comment:'), err.message);
+      writeErrorLog('aiCombo', media.user.username, err);
       failed++;
       if (errorCount >= 5) {
         console.log(chalk.red('Too many errors/challenges. Auto-pausing script for safety.'));
@@ -198,9 +202,9 @@ function generateComment(caption) {
       }
     }
     // Random delay
-    const delay = randomDelay(minD, maxD);
+    const delay = randomInRange(minD, maxD);
     process.stdout.write(chalk.gray(`Delay ${delay / 1000}s...`));
-    await new Promise(res => setTimeout(res, delay));
+    await sleep(delay);
   }
 
   // Auto-logout (clear session)

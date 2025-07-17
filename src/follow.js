@@ -1,18 +1,8 @@
 const chalk = require('chalk');
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
-const fs = require('fs');
-const path = require('path');
-
-function randomDelay(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function writeFollowLog(username, status) {
-  const waktu = new Date().toISOString();
-  const logLine = `[${waktu}] ${username} | ${status}\n`;
-  fs.appendFileSync(path.join(__dirname, '../logs/follow.log'), logLine);
-}
+const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
+const { writeActionLog, writeErrorLog } = require('./logger');
 
 module.exports = async function() {
   try {
@@ -23,38 +13,14 @@ module.exports = async function() {
     const { target } = await inquirer.prompt([
       { type: 'input', name: 'target', message: 'Target username:' }
     ]);
-    const { minDelay, maxDelay } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'minDelay',
-        message: 'Minimum delay between follows (in seconds):',
-        default: 180,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      },
-      {
-        type: 'input',
-        name: 'maxDelay',
-        message: 'Maximum delay between follows (in seconds):',
-        default: 360,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
-    if (minDelay > maxDelay) {
-      console.log(chalk.red('Minimum delay cannot be greater than maximum delay!'));
+    let minDelay, maxDelay;
+    try {
+      ({ minDelay, maxDelay } = await promptDelayRange(inquirer, { min: 180, max: 360 }));
+    } catch (e) {
+      console.log(chalk.red(e.message));
       return;
     }
-    const { followCount } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'followCount',
-        message: 'How many accounts do you want to follow? (Enter a number, or 0 for continuous mode):',
-        default: 10,
-        validate: v => !isNaN(v) && v >= 0 ? true : 'Please enter 0 or a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
+    let followCount = await promptCount(inquirer, 'How many accounts do you want to follow? (Enter a number, or 0 for continuous mode):', 10);
     if (followCount === 0) {
       console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
     }
@@ -75,36 +41,37 @@ module.exports = async function() {
         const posts = await userFeed.items();
         if (!posts || posts.length === 0) {
           console.log(chalk.yellow(`Skipped @${user.username} [no post] (not followed)`));
-          writeFollowLog(user.username, 'SKIPPED [no post]');
+          writeActionLog('follow', user.username, 'SKIPPED [no post]');
           continue; // skip delay
         }
         await ig.friendship.create(user.pk);
         if (user.is_private) {
           console.log(chalk.yellow(`Skipped @${user.username} [priv acc]`));
-          writeFollowLog(user.username, 'FOLLOWED [priv acc]');
+          writeActionLog('follow', user.username, 'FOLLOWED [priv acc]');
         } else {
           console.log(chalk.green(`Followed @${user.username}`));
-          writeFollowLog(user.username, 'FOLLOWED');
+          writeActionLog('follow', user.username, 'FOLLOWED');
         }
       } catch (err) {
         if (err && err.message && err.message.includes('404')) {
           console.log(chalk.yellow(`Skipped @${user.username} [404 Not Found]`));
-          writeFollowLog(user.username, 'SKIPPED [404 Not Found]');
+          writeActionLog('follow', user.username, 'SKIPPED [404 Not Found]');
           continue; // skip delay
         }
         console.log(chalk.red(`Failed to follow @${user.username}: ${err.message}`));
-        writeFollowLog(user.username, `FAILED: ${err.message}`);
+        writeErrorLog('follow', user.username, err);
       }
       count++;
       if ((followCount === 0 || count < followCount) && i < followers.length - 1) {
-        const delaySec = randomDelay(minDelay, maxDelay);
+        const delaySec = randomInRange(minDelay, maxDelay);
         console.log(chalk.gray(`Waiting ${delaySec} seconds before next follow...`));
-        await new Promise(res => setTimeout(res, delaySec * 1000));
+        await sleep(delaySec * 1000);
       }
     }
     console.log(chalk.cyan(`\nDone! Followed ${count} users from @${target}'s followers.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in follow.js:'), err && err.message ? err.message : err);
+    writeErrorLog('follow', '-', err);
     throw err;
   }
 }; 

@@ -1,26 +1,23 @@
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const { writeLog } = require('./logger');
+const { writeLog, writeErrorLog } = require('./logger');
+const { sleep } = require('./utils');
 
 module.exports = async function() {
   console.log(chalk.cyan('\n=== MASS DELETE POSTS/PHOTOS ===\n'));
-  
+  let ig;
   try {
-    const ig = await igLogin();
-    
+    ig = await igLogin();
     // Get user's media
     console.log(chalk.yellow('Fetching your posts...'));
     const userFeed = ig.feed.user(ig.state.cookieUserId);
     const posts = await userFeed.items();
-    
     if (posts.length === 0) {
       console.log(chalk.yellow('No posts found to delete.'));
       return;
     }
-    
     console.log(chalk.green(`Found ${posts.length} posts.`));
-    
     // Filter options
     const { filterType } = await inquirer.prompt([
       {
@@ -36,15 +33,12 @@ module.exports = async function() {
         ]
       }
     ]);
-    
     let postsToDelete = [];
-    
     switch (filterType) {
       case 'all':
         postsToDelete = posts;
         break;
-        
-      case 'date':
+      case 'date': {
         const { startDate, endDate } = await inquirer.prompt([
           {
             type: 'input',
@@ -65,17 +59,15 @@ module.exports = async function() {
             }
           }
         ]);
-        
         const start = new Date(startDate);
         const end = new Date(endDate);
-        
         postsToDelete = posts.filter(post => {
           const postDate = new Date(post.taken_at * 1000);
           return postDate >= start && postDate <= end;
         });
         break;
-        
-      case 'caption':
+      }
+      case 'caption': {
         const { keywords } = await inquirer.prompt([
           {
             type: 'input',
@@ -83,15 +75,14 @@ module.exports = async function() {
             message: 'Enter keywords to search in captions (comma separated):'
           }
         ]);
-        
         const keywordList = keywords.split(',').map(k => k.trim().toLowerCase());
         postsToDelete = posts.filter(post => {
           const caption = (post.caption?.text || '').toLowerCase();
           return keywordList.some(keyword => caption.includes(keyword));
         });
         break;
-        
-      case 'engagement':
+      }
+      case 'engagement': {
         const { minLikes } = await inquirer.prompt([
           {
             type: 'number',
@@ -100,11 +91,10 @@ module.exports = async function() {
             default: 10
           }
         ]);
-        
         postsToDelete = posts.filter(post => post.like_count < minLikes);
         break;
-        
-      case 'count':
+      }
+      case 'count': {
         const { count } = await inquirer.prompt([
           {
             type: 'number',
@@ -114,18 +104,15 @@ module.exports = async function() {
             validate: (input) => input > 0 && input <= posts.length ? true : `Must be between 1 and ${posts.length}`
           }
         ]);
-        
         postsToDelete = posts.slice(0, count);
         break;
+      }
     }
-    
     if (postsToDelete.length === 0) {
       console.log(chalk.yellow('No posts match the selected criteria.'));
       return;
     }
-    
     console.log(chalk.yellow(`\nFound ${postsToDelete.length} posts to delete.`));
-    
     // Show preview
     const { showPreview } = await inquirer.prompt([
       {
@@ -135,7 +122,6 @@ module.exports = async function() {
         default: true
       }
     ]);
-    
     if (showPreview) {
       console.log(chalk.cyan('\n=== PREVIEW OF POSTS TO DELETE ==='));
       postsToDelete.slice(0, 5).forEach((post, index) => {
@@ -147,7 +133,6 @@ module.exports = async function() {
         console.log(chalk.gray(`... and ${postsToDelete.length - 5} more posts`));
       }
     }
-    
     // Final confirmation
     const { confirm } = await inquirer.prompt([
       {
@@ -157,12 +142,10 @@ module.exports = async function() {
         default: false
       }
     ]);
-    
     if (!confirm) {
       console.log(chalk.yellow('Operation cancelled.'));
       return;
     }
-    
     // Delete settings
     const { delay } = await inquirer.prompt([
       {
@@ -173,24 +156,18 @@ module.exports = async function() {
         validate: (input) => input >= 1 ? true : 'Delay must be at least 1 second'
       }
     ]);
-    
     console.log(chalk.cyan('\n=== STARTING MASS DELETE ===\n'));
-    
     let deletedCount = 0;
     let errorCount = 0;
-    
     for (let i = 0; i < postsToDelete.length; i++) {
       const post = postsToDelete[i];
       const date = new Date(post.taken_at * 1000).toLocaleDateString();
-      
+      let postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
       try {
         console.log(chalk.yellow(`Deleting post ${i + 1}/${postsToDelete.length} (${date})...`));
-        
         await ig.media.delete(post.id);
         deletedCount++;
-        
         // Log the action
-        const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
         writeLog({
           waktu: new Date().toISOString(),
           feature: 'MASS_DELETE',
@@ -199,20 +176,17 @@ module.exports = async function() {
           status: 'SUCCESS',
           url: postUrl
         });
-        
         console.log(chalk.green(`✓ Deleted successfully`));
-        
         // Delay between deletions
         if (i < postsToDelete.length - 1) {
           console.log(chalk.gray(`Waiting ${delay} seconds...`));
-          await new Promise(resolve => setTimeout(resolve, delay * 1000));
+          await sleep(delay * 1000);
         }
-        
       } catch (error) {
         errorCount++;
         console.log(chalk.red(`✗ Failed to delete: ${error.message}`));
-        
         // Log error
+        writeErrorLog('MASS_DELETE_ERROR', ig.state?.username || '-', error);
         writeLog({
           waktu: new Date().toISOString(),
           feature: 'MASS_DELETE_ERROR',
@@ -223,15 +197,16 @@ module.exports = async function() {
         });
       }
     }
-    
     console.log(chalk.cyan('\n=== MASS DELETE COMPLETED ==='));
     console.log(chalk.green(`Successfully deleted: ${deletedCount} posts`));
     if (errorCount > 0) {
       console.log(chalk.red(`Failed to delete: ${errorCount} posts`));
     }
-    
   } catch (error) {
     console.log(chalk.red('Mass delete failed:'), error.message);
-    writeLog({ waktu: new Date().toISOString(), feature: 'MASS_DELETE_ERROR', user: ig.state?.username || '-', detail: `FATAL: ${error.message}`, status: 'FATAL' });
+    if (ig && ig.state) {
+      writeErrorLog('MASS_DELETE_ERROR', ig.state?.username || '-', error);
+      writeLog({ waktu: new Date().toISOString(), feature: 'MASS_DELETE_ERROR', user: ig.state?.username || '-', detail: `FATAL: ${error.message}`, status: 'FATAL' });
+    }
   }
 }; 

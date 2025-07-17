@@ -1,12 +1,8 @@
 const chalk = require('chalk');
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
-const { writeLog } = require('./logger');
-const path = require('path');
-
-function randomDelay(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+const { writeLog, writeErrorLog } = require('./logger');
+const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
 
 module.exports = async function() {
   try {
@@ -14,38 +10,14 @@ module.exports = async function() {
     const { hashtag } = await inquirer.prompt([
       { type: 'input', name: 'hashtag', message: 'Hashtag (without #):' }
     ]);
-    const { minDelay, maxDelay } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'minDelay',
-        message: 'Minimum delay between likes (in seconds):',
-        default: 60,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      },
-      {
-        type: 'input',
-        name: 'maxDelay',
-        message: 'Maximum delay between likes (in seconds):',
-        default: 120,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
-    if (minDelay > maxDelay) {
-      console.log(chalk.red('Minimum delay cannot be greater than maximum delay!'));
+    let minDelay, maxDelay;
+    try {
+      ({ minDelay, maxDelay } = await promptDelayRange(inquirer, { min: 60, max: 120 }));
+    } catch (e) {
+      console.log(chalk.red(e.message));
       return;
     }
-    const { likeCount } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'likeCount',
-        message: 'How many posts do you want to like? (Enter a number, or 0 for continuous mode):',
-        default: 10,
-        validate: v => !isNaN(v) && v >= 0 ? true : 'Please enter 0 or a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
+    let likeCount = await promptCount(inquirer, 'How many posts do you want to like? (Enter a number, or 0 for continuous mode):', 10);
     if (likeCount === 0) {
       console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
     }
@@ -87,18 +59,20 @@ module.exports = async function() {
           continue; // skip delay
         }
         console.log(chalk.red(`Failed to like @${user.username}: ${err.message}`));
+        writeErrorLog('LIKE_BY_HASHTAG', user.username, err);
         writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: user.username, detail: `FAILED: ${err.message}`, status: 'FAILED' });
       }
       count++;
       if ((likeCount === 0 || count < likeCount) && i < medias.length - 1) {
-        const delaySec = randomDelay(minDelay, maxDelay);
+        const delaySec = randomInRange(minDelay, maxDelay);
         console.log(chalk.gray(`Waiting ${delaySec} seconds before next like...`));
-        await new Promise(res => setTimeout(res, delaySec * 1000));
+        await sleep(delaySec * 1000);
       }
     }
     console.log(chalk.cyan(`\nDone! Liked ${count} posts from hashtag #${hashtag}.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in likeByHashtag.js:'), err && err.message ? err.message : err);
+    writeErrorLog('LIKE_BY_HASHTAG', '-', err);
     writeLog({ waktu: new Date().toISOString(), feature: 'LIKE_BY_HASHTAG', user: '-', detail: `FATAL: ${err.message}`, status: 'FATAL' });
     throw err;
   }

@@ -1,21 +1,13 @@
 const chalk = require('chalk');
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
+const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
+const { writeActionLog, writeErrorLog } = require('./logger');
 const fs = require('fs');
 const path = require('path');
 
-function randomDelay(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 function randomStoryDelay() {
-  return Math.floor(Math.random() * (10 - 5 + 1)) + 5;
-}
-
-function writeActionLog(feature, username, status) {
-  const waktu = new Date().toISOString();
-  const logLine = `[${waktu}] [${feature}] ${username} | ${status}\n`;
-  fs.appendFileSync(path.join(__dirname, '../logs/actions.log'), logLine);
+  return randomInRange(5, 10);
 }
 
 module.exports = async function() {
@@ -90,38 +82,14 @@ module.exports = async function() {
     }
     // Setelah pengisian targetList
     targetList = targetList.filter(u => u && u.pk && u.username);
-    const { minDelay, maxDelay } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'minDelay',
-        message: 'Minimum delay between users (in seconds):',
-        default: 60,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      },
-      {
-        type: 'input',
-        name: 'maxDelay',
-        message: 'Maximum delay between users (in seconds):',
-        default: 120,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
-    if (minDelay > maxDelay) {
-      console.log(chalk.red('Minimum delay cannot be greater than maximum delay!'));
+    let minDelay, maxDelay;
+    try {
+      ({ minDelay, maxDelay } = await promptDelayRange(inquirer, { min: 60, max: 120 }));
+    } catch (e) {
+      console.log(chalk.red(e.message));
       return;
     }
-    const { viewCount } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'viewCount',
-        message: 'How many targets do you want to process? (Enter a number, or 0 for continuous mode):',
-        default: 10,
-        validate: v => !isNaN(v) && v >= 0 ? true : 'Please enter 0 or a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
+    let viewCount = await promptCount(inquirer, 'How many targets do you want to process? (Enter a number, or 0 for continuous mode):', 10);
     if (viewCount === 0) {
       console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
     }
@@ -164,8 +132,9 @@ module.exports = async function() {
             // Tambahkan delay random 5-10 detik antar story
             const storyDelay = randomStoryDelay();
             console.log(chalk.gray(`Waiting ${storyDelay} seconds before next story...`));
-            await new Promise(res => setTimeout(res, storyDelay * 1000));
+            await sleep(storyDelay * 1000);
           } catch (e) {
+            writeErrorLog('viewStory', user.username, e);
             continue;
           }
         }
@@ -177,18 +146,19 @@ module.exports = async function() {
           continue; // skip delay
         }
         console.log(chalk.red(`Failed for @${uname}: ${err.message}`));
-        writeActionLog('viewStory', uname, `FAILED: ${err.message}`);
+        writeErrorLog('viewStory', uname, err);
       }
       count++;
       if ((viewCount === 0 || count < viewCount) && i < targetList.length - 1) {
-        const delaySec = randomDelay(minDelay, maxDelay);
+        const delaySec = randomInRange(minDelay, maxDelay);
         console.log(chalk.gray(`Waiting ${delaySec} seconds before next action...`));
-        await new Promise(res => setTimeout(res, delaySec * 1000));
+        await sleep(delaySec * 1000);
       }
     }
     console.log(chalk.cyan(`\nDone! Processed ${count} targets.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in viewStory.js:'), err && err.message ? err.message : err);
+    writeErrorLog('viewStory', '-', err);
     throw err;
   }
 }; 

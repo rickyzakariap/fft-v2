@@ -1,18 +1,8 @@
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const fs = require('fs');
-const path = require('path');
-
-function randomDelay(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function writeActionLog(feature, username, status) {
-  const waktu = new Date().toISOString();
-  const logLine = `[${waktu}] [${feature}] ${username} | ${status}\n`;
-  fs.appendFileSync(path.join(__dirname, '../logs/actions.log'), logLine);
-}
+const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
+const { writeActionLog, writeErrorLog } = require('./logger');
 
 module.exports = async function() {
   try {
@@ -21,38 +11,14 @@ module.exports = async function() {
     const { target } = await inquirer.prompt([
       { type: 'input', name: 'target', message: 'Target username:' }
     ]);
-    const { minDelay, maxDelay } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'minDelay',
-        message: 'Minimum delay between actions (in seconds):',
-        default: 180,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      },
-      {
-        type: 'input',
-        name: 'maxDelay',
-        message: 'Maximum delay between actions (in seconds):',
-        default: 360,
-        validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
-    if (minDelay > maxDelay) {
-      console.log(chalk.red('Minimum delay cannot be greater than maximum delay!'));
+    let minDelay, maxDelay;
+    try {
+      ({ minDelay, maxDelay } = await promptDelayRange(inquirer, { min: 180, max: 360 }));
+    } catch (e) {
+      console.log(chalk.red(e.message));
       return;
     }
-    const { followCount } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'followCount',
-        message: 'How many accounts do you want to process? (Enter a number, or 0 for continuous mode):',
-        default: 10,
-        validate: v => !isNaN(v) && v >= 0 ? true : 'Please enter 0 or a positive number!',
-        filter: v => Number(v)
-      }
-    ]);
+    let followCount = await promptCount(inquirer, 'How many accounts do you want to process? (Enter a number, or 0 for continuous mode):', 10);
     if (followCount === 0) {
       console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
     }
@@ -95,18 +61,19 @@ module.exports = async function() {
           continue; // skip delay
         }
         console.log(chalk.red(`Failed for @${user.username}: ${err.message}`));
-        writeActionLog('followLikeDmFollowersTarget', user.username, `FAILED: ${err.message}`);
+        writeErrorLog('followLikeDmFollowersTarget', user.username, err);
       }
       count++;
       if ((followCount === 0 || count < followCount) && i < followers.length - 1) {
-        const delaySec = randomDelay(minDelay, maxDelay);
+        const delaySec = randomInRange(minDelay, maxDelay);
         console.log(chalk.gray(`Waiting ${delaySec} seconds before next action...`));
-        await new Promise(res => setTimeout(res, delaySec * 1000));
+        await sleep(delaySec * 1000);
       }
     }
     console.log(chalk.cyan(`\nDone! Followed, liked, and DM (stub) ${count} users from @${target}'s followers.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in followLikeDmFollowersTarget.js:'), err && err.message ? err.message : err);
+    writeErrorLog('followLikeDmFollowersTarget', '-', err);
     throw err;
   }
 }; 

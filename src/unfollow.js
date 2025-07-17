@@ -1,15 +1,8 @@
 const chalk = require('chalk');
 const { igLogin } = require('./login');
 const inquirer = require('inquirer');
-const fs = require('fs');
-const path = require('path');
-const { randomDelay } = require('./utils');
-
-function writeActionLog(feature, username, status) {
-  const waktu = new Date().toISOString();
-  const logLine = `[${waktu}] [${feature}] ${username} | ${status}\n`;
-  fs.appendFileSync(path.join(__dirname, '../logs/actions.log'), logLine);
-}
+const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
+const { writeActionLog, writeErrorLog } = require('./logger');
 
 function isInactive(user, months, lastPostTime) {
   if (!lastPostTime) return true; // No posts = inactive
@@ -21,38 +14,14 @@ function isInactive(user, months, lastPostTime) {
 
 module.exports = async function() {
   console.log(chalk.cyan('\n=== UNFOLLOW BY CRITERIA ===\n'));
-  const { minDelay, maxDelay } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'minDelay',
-      message: 'Minimum delay between unfollows (in seconds):',
-      default: 60,
-      validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-      filter: v => Number(v)
-    },
-    {
-      type: 'input',
-      name: 'maxDelay',
-      message: 'Maximum delay between unfollows (in seconds):',
-      default: 120,
-      validate: v => !isNaN(v) && v > 0 ? true : 'Please enter a positive number!',
-      filter: v => Number(v)
-    }
-  ]);
-  if (minDelay > maxDelay) {
-    console.log(chalk.red('Minimum delay cannot be greater than maximum delay!'));
+  let minDelay, maxDelay;
+  try {
+    ({ minDelay, maxDelay } = await promptDelayRange(inquirer, { min: 60, max: 120 }));
+  } catch (e) {
+    console.log(chalk.red(e.message));
     return;
   }
-  const { unfollowCount } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'unfollowCount',
-      message: 'How many users do you want to unfollow? (Enter a number, or 0 for continuous mode):',
-      default: 10,
-      validate: v => !isNaN(v) && v >= 0 ? true : 'Please enter 0 or a positive number!',
-      filter: v => Number(v)
-    }
-  ]);
+  let unfollowCount = await promptCount(inquirer, 'How many users do you want to unfollow? (Enter a number, or 0 for continuous mode):', 10);
   if (unfollowCount === 0) {
     console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
   }
@@ -158,18 +127,19 @@ module.exports = async function() {
           continue;
         }
         console.log(chalk.red(`Failed to unfollow @${user.username}: ${err.message}`));
-        writeActionLog('UNFOLLOW', user.username, `FAILED: ${err.message}`);
+        writeErrorLog('UNFOLLOW', user.username, err);
       }
       count++;
       if ((unfollowCount === 0 || count < unfollowCount) && i < filtered.length - 1) {
-        const delaySec = randomDelay(minDelay, maxDelay);
+        const delaySec = randomInRange(minDelay, maxDelay);
         console.log(chalk.gray(`Waiting ${delaySec} seconds before next unfollow...`));
-        await new Promise(res => setTimeout(res, delaySec * 1000));
+        await sleep(delaySec * 1000);
       }
     }
     console.log(chalk.cyan(`\nDone! Unfollowed ${count} users matching your criteria.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in unfollow.js:'), err && err.message ? err.message : err);
+    writeErrorLog('UNFOLLOW', '-', err);
     throw err;
   }
 }; 
