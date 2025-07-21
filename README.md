@@ -74,5 +74,9 @@ All actions are logged to `logs/actions.log`:
 ## Contribution
 Pull requests and issues are welcome!!
 
+---
+
+[![wakatime](https://wakatime.com/badge/github/rickyzakariap/fft-v2.svg)](https://wakatime.com/badge/github/rickyzakariap/fft-v2)
+
 ## License
 MIT
