@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
 const { writeActionLog, writeErrorLog } = require('./logger');
 
-module.exports = async function() {
+module.exports = async function () {
   try {
     console.log(chalk.cyan('\n=== FOLLOW + LIKE + COMMENT BY LOCATION ===\n'));
     const { location } = await inquirer.prompt([
@@ -21,15 +21,50 @@ module.exports = async function() {
     if (followCount === 0) {
       console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
     }
+
+    // Get custom comment
+    const { commentInput } = await inquirer.prompt([
+      { type: 'input', name: 'commentInput', message: 'Enter comment(s) to use (separate by comma for random):', default: 'Nice post!' }
+    ]);
+    const commentList = commentInput.split(',').map(c => c.trim()).filter(Boolean);
+
     const ig = await igLogin();
-    // Ambil media berdasarkan lokasi
-    const locationId = isNaN(location) ? await ig.search.location(location) : location;
+
+    // Search for location and get ID
+    let locationId;
+    if (isNaN(location)) {
+      console.log(chalk.gray('Searching for location...'));
+      const searchResults = await ig.search.location(0, 0, location);
+      if (!searchResults || searchResults.length === 0) {
+        console.log(chalk.red('Location not found!'));
+        return;
+      }
+      // Show location options
+      const { selectedLocation } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'selectedLocation',
+          message: 'Select location:',
+          choices: searchResults.slice(0, 10).map(loc => ({
+            name: `${loc.name} (${loc.address || 'No address'})`,
+            value: loc.pk
+          }))
+        }
+      ]);
+      locationId = selectedLocation;
+    } else {
+      locationId = location;
+    }
+
     const locationFeed = ig.feed.location(locationId);
     let medias = [];
+    let page = 0;
     do {
       medias = medias.concat(await locationFeed.items());
+      page++;
+      if (page >= 5) break; // Limit pages
     } while (locationFeed.isMoreAvailable());
-    console.log(chalk.green(`Found ${medias.length} posts for location ${location}`));
+    console.log(chalk.green(`Found ${medias.length} posts for location`));
     let count = 0;
     for (let i = 0; i < medias.length; i++) {
       if (followCount > 0 && count >= followCount) break;
@@ -52,9 +87,10 @@ module.exports = async function() {
         } else {
           await ig.friendship.create(user.pk);
           await ig.media.like({ mediaId: media.id, moduleInfo: { module_name: 'feed_timeline' }, d: 0 });
-          await ig.media.comment({ mediaId: media.id, text: 'Nice post!' });
-          console.log(chalk.green(`Followed, liked, and commented @${user.username}`));
-          writeActionLog('followLikeCommentByLocation', user.username, 'FOLLOWED & LIKED & COMMENTED');
+          const comment = commentList.length === 1 ? commentList[0] : commentList[Math.floor(Math.random() * commentList.length)];
+          await ig.media.comment({ mediaId: media.id, text: comment });
+          console.log(chalk.green(`Followed, liked, and commented @${user.username} | "${comment}"`));
+          writeActionLog('followLikeCommentByLocation', user.username, `FOLLOWED & LIKED & COMMENTED: ${comment}`);
         }
       } catch (err) {
         if (err && err.message && err.message.includes('404')) {
