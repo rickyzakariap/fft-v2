@@ -3,28 +3,30 @@ const { igLogin } = require('./login');
 const inquirer = require('inquirer');
 const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
 const { writeActionLog, writeErrorLog } = require('./logger');
-const fs = require('fs');
-const path = require('path');
 
-function randomStoryDelay() {
-  return randomInRange(5, 10);
-}
+// Story-specific delay constants
+const STORY_DELAY_MIN = 5;
+const STORY_DELAY_MAX = 10;
 
-module.exports = async function() {
+module.exports = async function () {
   try {
     console.log(chalk.cyan('\n=== STORY VIEWER ===\n'));
     const { mode } = await inquirer.prompt([
-      { type: 'list', name: 'mode', message: 'Select mode:', choices: [
-        { name: 'View only', value: 'view' },
-        { name: 'View + Love', value: 'love' }
-      ]}
+      {
+        type: 'list', name: 'mode', message: 'Select mode:', choices: [
+          { name: 'View only', value: 'view' },
+          { name: 'View + Love', value: 'love' }
+        ]
+      }
     ]);
     const { source } = await inquirer.prompt([
-      { type: 'list', name: 'source', message: 'Target source:', choices: [
-        { name: 'By Following (your account)', value: 'following' },
-        { name: 'By Followers Target', value: 'followersTarget' },
-        { name: 'By Hashtag', value: 'hashtag' }
-      ]}
+      {
+        type: 'list', name: 'source', message: 'Target source:', choices: [
+          { name: 'By Following (your account)', value: 'following' },
+          { name: 'By Followers Target', value: 'followersTarget' },
+          { name: 'By Hashtag', value: 'hashtag' }
+        ]
+      }
     ]);
     let targetList = [];
     const ig = await igLogin();
@@ -40,7 +42,7 @@ module.exports = async function() {
           } else if (item.pk) {
             targetList.push(item);
           } else {
-            console.log('DEBUG: item tidak punya user.pk atau pk', item);
+            // Skip items without valid user data
           }
         }
       } while (followingFeed.isMoreAvailable());
@@ -56,7 +58,7 @@ module.exports = async function() {
           } else if (item.pk) {
             targetList.push(item);
           } else {
-            console.log('DEBUG: item tidak punya user.pk atau pk', item);
+            // Skip items without valid user data
           }
         }
       } while (followersFeed.isMoreAvailable());
@@ -129,8 +131,8 @@ module.exports = async function() {
               console.log(chalk.green(`Viewed story of @${user.username}`));
               writeActionLog('viewStory', user.username, 'VIEWED STORY');
             }
-            // Tambahkan delay random 5-10 detik antar story
-            const storyDelay = randomStoryDelay();
+            // Random delay between stories to appear more human
+            const storyDelay = randomInRange(STORY_DELAY_MIN, STORY_DELAY_MAX);
             console.log(chalk.gray(`Waiting ${storyDelay} seconds before next story...`));
             await sleep(storyDelay * 1000);
           } catch (e) {
