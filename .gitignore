@@ -169,6 +169,7 @@ jspm_packages/
 
 # Instagram session files
 session.json
+sessions/
 *.session
 ig-auto/
 
