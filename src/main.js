@@ -27,6 +27,7 @@ const mainMenuFeatures = [
   { name: 'Comment', fn: commentMenu },
   { name: 'Story', fn: storyMenu },
   { name: 'Mass Delete', fn: massDeleteMenu },
+  { name: 'Mass Archive', fn: massArchiveMenu },
   { name: 'Multi-Account', fn: multiAccountMenu },
   { name: 'Information / About', fn: aboutMenu },
   { name: 'Exit', fn: exitMenu }
@@ -147,6 +148,14 @@ async function massDeleteMenu() {
     { name: 'Back', value: 'back' }
   ], 'Enter submenu letter:');
   if (val === 'massDelete') await runFeatureScript('massDelete.js');
+}
+
+async function massArchiveMenu() {
+  const val = await submenuPrompt([
+    { name: 'Archive All Posts', value: 'archiveAll' },
+    { name: 'Back', value: 'back' }
+  ], 'Enter submenu letter:');
+  if (val === 'archiveAll') await runFeatureScript('massArchive.js');
 }
 
 async function multiAccountMenu() {
