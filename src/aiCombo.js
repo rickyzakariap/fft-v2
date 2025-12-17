@@ -1,9 +1,8 @@
 const { igLogin } = require('./login');
 const { writeLog, writeErrorLog } = require('./logger');
-const { randomInRange, detectLang } = require('./utils');
+const { randomInRange, detectLang, sleep } = require('./utils');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const moment = require('moment');
 require('dotenv').config();
 
 const templates = {
@@ -61,11 +60,8 @@ function generateComment(caption) {
   return arr[idx](caption);
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
-(async () => {
+module.exports = async function () {
   console.log(chalk.cyan('\n=== AI COMBO (LIKE + HUMANIZED COMMENT) ===\n'));
 
   // Prompt for target type, etc (tidak menanyakan username/password)
@@ -75,17 +71,21 @@ function sleep(ms) {
     { type: 'confirm', name: 'enableSchedule', message: 'Enable scheduled run?', default: false },
     { type: 'input', name: 'startHour', message: 'Start hour (0-23):', default: 8, when: a => a.enableSchedule, validate: v => !isNaN(v) && v >= 0 && v <= 23 },
     { type: 'input', name: 'endHour', message: 'End hour (0-23):', default: 20, when: a => a.enableSchedule, validate: v => !isNaN(v) && v >= 0 && v <= 23 },
-    { type: 'list', name: 'source', message: 'Target source:', choices: [
-      { name: 'By Hashtag', value: 'hashtag' },
-      { name: 'By Followers Target', value: 'followersTarget' },
-      { name: 'By Following (your account)', value: 'following' }
-    ]},
+    {
+      type: 'list', name: 'source', message: 'Target source:', choices: [
+        { name: 'By Hashtag', value: 'hashtag' },
+        { name: 'By Followers Target', value: 'followersTarget' },
+        { name: 'By Following (your account)', value: 'following' }
+      ]
+    },
     { type: 'input', name: 'hashtag', message: 'Hashtag:', when: a => a.source === 'hashtag' },
     { type: 'input', name: 'target', message: 'Target username:', when: a => a.source === 'followersTarget' },
-    { type: 'list', name: 'mode', message: 'Execution mode:', choices: [
-      { name: 'Limit (by target count)', value: 'limit' },
-      { name: 'Continuous (all available)', value: 'continuous' }
-    ], default: 'limit' },
+    {
+      type: 'list', name: 'mode', message: 'Execution mode:', choices: [
+        { name: 'Limit (by target count)', value: 'limit' },
+        { name: 'Continuous (all available)', value: 'continuous' }
+      ], default: 'limit'
+    },
     { type: 'input', name: 'jumlah', message: 'How many targets?', default: 10, when: a => a.mode === 'limit', validate: v => !isNaN(v) && v > 0 },
     { type: 'input', name: 'minDelay', message: 'Min delay (s):', default: 180, validate: v => !isNaN(v) && v > 0 },
     { type: 'input', name: 'maxDelay', message: 'Max delay (s):', default: 720, validate: v => !isNaN(v) && v > 0 }
@@ -161,7 +161,7 @@ function sleep(ms) {
   for (let i = 0; i < medias.length; i++) {
     const media = medias[i];
     if (!media || !media.user || !media.user.username) {
-      const waktu = moment().format('YYYY-MM-DD HH:mm:ss');
+      const waktu = new Date().toISOString().replace('T', ' ').slice(0, 19);
       writeLog({ waktu, feature: 'aiCombo', user: '-', detail: '-', status: 'FAILED (media.user missing)' });
       console.log(chalk.yellow(`\n[${i + 1}/${medias.length}] Invalid media, skipped.`));
       continue;
@@ -182,7 +182,7 @@ function sleep(ms) {
           await ig.media.like({ mediaId: media.id, moduleInfo: { module_name: 'feed_timeline' }, d: 0 });
           const comment = generateComment(media.caption && media.caption.text ? media.caption.text : '');
           await ig.media.comment({ mediaId: media.id, text: comment });
-          const waktu = moment.unix(media.taken_at).format('YYYY-MM-DD HH:mm:ss');
+          const waktu = new Date(media.taken_at * 1000).toISOString().replace('T', ' ').slice(0, 19);
           const postUrl = media.code ? `https://www.instagram.com/p/${media.code}/` : '-';
           writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Liked+Commented @${media.user.username} ${postUrl} | "${comment}"`, status: 'SUCCESS', url: postUrl });
           console.log(chalk.green(`Followed + Liked + Commented! (${waktu})`));
@@ -191,7 +191,7 @@ function sleep(ms) {
       success++;
     } catch (err) {
       errorCount++;
-      const waktu = moment().format('YYYY-MM-DD HH:mm:ss');
+      const waktu = new Date().toISOString().replace('T', ' ').slice(0, 19);
       writeLog({ waktu, feature: 'aiCombo', user: username, detail: `Failed like+comment @${media.user.username}`, status: 'FAILED' });
       console.log(chalk.red('Failed like+comment:'), err.message);
       writeErrorLog('aiCombo', media.user.username, err);
@@ -211,8 +211,7 @@ function sleep(ms) {
   try {
     await ig.account.logout();
     console.log(chalk.gray('Logged out from Instagram.'));
-  } catch {}
+  } catch { }
 
   console.log(chalk.cyan('\nFinished AI Combo (like + comment)!'));
-  return;
-})(); 
+}; 
