@@ -1,5 +1,18 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
+const { setupGracefulShutdown } = require('./utils');
+
+// Check Node.js version
+const nodeVersion = process.versions.node.split('.')[0];
+if (parseInt(nodeVersion) < 14) {
+  console.log(chalk.red(`Error: Node.js 14+ required. You have v${process.versions.node}`));
+  process.exit(1);
+}
+
+// Setup graceful shutdown
+setupGracefulShutdown(() => {
+  console.log(chalk.cyan('Thank you for using Instagram Tools!'));
+});
 
 // ASCII Art Logo
 console.log(chalk.cyan(`\n░▒▓████████▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░  \n░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░ \n░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░    ░▒▓█▓▒▒▓█▓▒░       ░▒▓█▓▒░ \n░▒▓██████▓▒░ ░▒▓██████▓▒░    ░▒▓█▓▒░    ░▒▓█▓▒▒▓█▓▒░ ░▒▓██████▓▒░  \n░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░     ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░     ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n░▒▓█▓▒░      ░▒▓█▓▒░         ░▒▓█▓▒░      ░▒▓██▓▒░  ░▒▓████████▓▒░ \n`));
@@ -139,10 +152,10 @@ async function massDeleteMenu() {
 async function multiAccountMenu() {
   const AccountManager = require('./accountManager');
   const BatchActions = require('./batchActions');
-  
+
   const accountManager = new AccountManager();
   const batchActions = new BatchActions();
-  
+
   const val = await submenuPrompt([
     { name: 'Manage Accounts', value: 'manage' },
     { name: 'Batch Follow', value: 'batchFollow' },
