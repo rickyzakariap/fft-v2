@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const { randomInRange, sleep, promptDelayRange, promptCount } = require('./utils');
 const { writeActionLog, writeErrorLog } = require('./logger');
 
-module.exports = async function() {
+module.exports = async function () {
   try {
     console.log(chalk.cyan('\n=== FOLLOW + LIKE + DM FOLLOWERS TARGET ===\n'));
     const ig = await igLogin();
@@ -22,6 +22,16 @@ module.exports = async function() {
     if (followCount === 0) {
       console.log(chalk.yellow('Warning: Continuous mode is not recommended. Use at your own risk! Press Ctrl+C to stop.'));
     }
+
+    // Get DM message template
+    const { dmMessage } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'dmMessage',
+        message: 'DM message (use {username} for their name):',
+        default: 'Hey {username}! Thanks for following, check out my latest post!'
+      }
+    ]);
     const targetId = await ig.user.getIdByUsername(target);
     const followersFeed = ig.feed.accountFollowers(targetId);
     let followers = [];
@@ -50,9 +60,18 @@ module.exports = async function() {
           await ig.friendship.create(user.pk);
           await ig.media.like({ mediaId: posts[0].id, moduleInfo: { module_name: 'profile' }, d: 0 });
           console.log(chalk.green(`Followed & liked latest post of @${user.username}`));
-          // Send DM (stub)
-          console.log(chalk.gray(`DM to @${user.username} [stub, implement as needed]`));
-          writeActionLog('followLikeDmFollowersTarget', user.username, 'FOLLOWED & LIKED & DM (stub)');
+
+          // Send DM
+          try {
+            const personalizedMessage = dmMessage.replace(/{username}/g, user.username);
+            const thread = ig.entity.directThread([user.pk.toString()]);
+            await thread.broadcastText(personalizedMessage);
+            console.log(chalk.green(`DM sent to @${user.username}`));
+            writeActionLog('followLikeDmFollowersTarget', user.username, 'FOLLOWED & LIKED & DM SENT');
+          } catch (dmErr) {
+            console.log(chalk.yellow(`DM failed for @${user.username}: ${dmErr.message}`));
+            writeActionLog('followLikeDmFollowersTarget', user.username, `FOLLOWED & LIKED (DM FAILED: ${dmErr.message})`);
+          }
         }
       } catch (err) {
         if (err && err.message && err.message.includes('404')) {
@@ -70,7 +89,7 @@ module.exports = async function() {
         await sleep(delaySec * 1000);
       }
     }
-    console.log(chalk.cyan(`\nDone! Followed, liked, and DM (stub) ${count} users from @${target}'s followers.`));
+    console.log(chalk.cyan(`\nDone! Followed, liked, and DM'd ${count} users from @${target}'s followers.`));
   } catch (err) {
     console.log(chalk.red('Fatal error in followLikeDmFollowersTarget.js:'), err && err.message ? err.message : err);
     writeErrorLog('followLikeDmFollowersTarget', '-', err);
