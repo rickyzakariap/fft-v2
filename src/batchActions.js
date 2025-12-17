@@ -10,7 +10,7 @@ class BatchActions {
 
   async batchFollow() {
     console.log(chalk.cyan('\n=== BATCH FOLLOW ===\n'));
-    
+
     const accounts = await this.selectMultipleAccounts();
     if (!accounts || accounts.length === 0) return;
 
@@ -45,7 +45,7 @@ class BatchActions {
     for (const account of accounts) {
       try {
         console.log(chalk.yellow(`\n--- Processing ${account.nickname} ---`));
-        
+
         const ig = await this.accountManager.loginToAccount(account);
         if (!ig) {
           console.log(chalk.red(`Failed to login to ${account.nickname}`));
@@ -60,12 +60,12 @@ class BatchActions {
         let followedCount = 0;
         for (let i = 0; i < Math.min(count, followers.length); i++) {
           const follower = followers[i];
-          
+
           try {
             if (!follower.is_private && !follower.friendship_status.following) {
               await ig.friendship.create(follower.pk);
               followedCount++;
-              
+
               writeLog({
                 waktu: new Date().toISOString(),
                 feature: 'BATCH_FOLLOW',
@@ -73,9 +73,9 @@ class BatchActions {
                 detail: `Followed @${follower.username}`,
                 status: 'SUCCESS'
               });
-              
+
               console.log(chalk.green(`✓ Followed @${follower.username}`));
-              
+
               if (i < Math.min(count, followers.length) - 1) {
                 await new Promise(resolve => setTimeout(resolve, delay * 1000));
               }
@@ -91,9 +91,9 @@ class BatchActions {
             });
           }
         }
-        
+
         console.log(chalk.green(`Completed: ${followedCount} follows for ${account.nickname}`));
-        
+
       } catch (error) {
         console.log(chalk.red(`Error processing ${account.nickname}: ${error.message}`));
       }
@@ -102,7 +102,7 @@ class BatchActions {
 
   async batchUnfollow() {
     console.log(chalk.cyan('\n=== BATCH UNFOLLOW ===\n'));
-    
+
     const accounts = await this.selectMultipleAccounts();
     if (!accounts || accounts.length === 0) return;
 
@@ -140,7 +140,7 @@ class BatchActions {
     for (const account of accounts) {
       try {
         console.log(chalk.yellow(`\n--- Processing ${account.nickname} ---`));
-        
+
         const ig = await this.accountManager.loginToAccount(account);
         if (!ig) {
           console.log(chalk.red(`Failed to login to ${account.nickname}`));
@@ -148,17 +148,17 @@ class BatchActions {
         }
 
         let usersToUnfollow = [];
-        
+
         if (unfollowType === 'not_followback') {
           // Get following and followers
           const followingFeed = ig.feed.accountFollowing(ig.state.cookieUserId);
           const followersFeed = ig.feed.accountFollowers(ig.state.cookieUserId);
-          
+
           const [following, followers] = await Promise.all([
             followingFeed.items(),
             followersFeed.items()
           ]);
-          
+
           const followerUsernames = new Set(followers.map(f => f.username));
           usersToUnfollow = following.filter(user => !followerUsernames.has(user.username));
         } else {
@@ -170,11 +170,11 @@ class BatchActions {
         let unfollowedCount = 0;
         for (let i = 0; i < Math.min(count, usersToUnfollow.length); i++) {
           const user = usersToUnfollow[i];
-          
+
           try {
             await ig.friendship.destroy(user.pk);
             unfollowedCount++;
-            
+
             writeLog({
               waktu: new Date().toISOString(),
               feature: 'BATCH_UNFOLLOW',
@@ -182,9 +182,9 @@ class BatchActions {
               detail: `Unfollowed @${user.username}`,
               status: 'SUCCESS'
             });
-            
+
             console.log(chalk.green(`✓ Unfollowed @${user.username}`));
-            
+
             if (i < Math.min(count, usersToUnfollow.length) - 1) {
               await new Promise(resolve => setTimeout(resolve, delay * 1000));
             }
@@ -199,9 +199,9 @@ class BatchActions {
             });
           }
         }
-        
+
         console.log(chalk.green(`Completed: ${unfollowedCount} unfollows for ${account.nickname}`));
-        
+
       } catch (error) {
         console.log(chalk.red(`Error processing ${account.nickname}: ${error.message}`));
       }
@@ -210,7 +210,7 @@ class BatchActions {
 
   async batchLike() {
     console.log(chalk.cyan('\n=== BATCH LIKE ===\n'));
-    
+
     const accounts = await this.selectMultipleAccounts();
     if (!accounts || accounts.length === 0) return;
 
@@ -242,7 +242,7 @@ class BatchActions {
     for (const account of accounts) {
       try {
         console.log(chalk.yellow(`\n--- Processing ${account.nickname} ---`));
-        
+
         const ig = await this.accountManager.loginToAccount(account);
         if (!ig) {
           console.log(chalk.red(`Failed to login to ${account.nickname}`));
@@ -256,7 +256,8 @@ class BatchActions {
         let likedCount = 0;
         for (let i = 0; i < Math.min(count, posts.length); i++) {
           const post = posts[i];
-          
+          const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
+
           try {
             if (!post.has_liked) {
               await ig.media.like({
@@ -268,8 +269,7 @@ class BatchActions {
                 }
               });
               likedCount++;
-              
-              const postUrl = post.code ? `https://www.instagram.com/p/${post.code}/` : '-';
+
               writeLog({
                 waktu: new Date().toISOString(),
                 feature: 'BATCH_LIKE',
@@ -278,9 +278,9 @@ class BatchActions {
                 status: 'SUCCESS',
                 url: postUrl
               });
-              
+
               console.log(chalk.green(`✓ Liked post by @${post.user.username}`));
-              
+
               if (i < Math.min(count, posts.length) - 1) {
                 await new Promise(resolve => setTimeout(resolve, delay * 1000));
               }
@@ -297,9 +297,9 @@ class BatchActions {
             });
           }
         }
-        
+
         console.log(chalk.green(`Completed: ${likedCount} likes for ${account.nickname}`));
-        
+
       } catch (error) {
         console.log(chalk.red(`Error processing ${account.nickname}: ${error.message}`));
       }
