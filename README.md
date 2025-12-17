@@ -18,13 +18,14 @@ A modular Node.js toolkit for automating Instagram actions: follow, unfollow, li
 ## Features
 
 ### Core Actions
-- **Follow:** Target by followers, hashtag, or location. Includes Follow+Like, Follow+Comment, and more. Skips private/0-post accounts as needed.
+- **Follow:** Target by followers, hashtag, or location. Includes Follow+Like, Follow+Comment, Follow+Like+DM, and more. Skips private/0-post accounts as needed.
 - **Unfollow:**
   - By criteria: inactive, no profile pic, follower/following thresholds, private/public, username keyword, whitelist.
   - Not followback: Unfollow users who don't follow you back.
 - **Like:** By followers, hashtag, or target user.
 - **Comment:** By hashtag or target, with randomization and language detection.
 - **Story Viewer:** View or love stories from following, followers, or hashtag.
+- **Direct Message:** Send personalized DMs to new followers with variable substitution.
 
 ### Advanced Features
 - **Mass Delete:** Delete multiple posts with filtering by date, caption keywords, engagement, or count.
@@ -32,12 +33,15 @@ A modular Node.js toolkit for automating Instagram actions: follow, unfollow, li
   - Manage multiple Instagram accounts
   - Batch follow/unfollow/like across accounts
   - Account info tracking and updates
-- **AI Combo:** Like + humanized comment.
+- **AI Combo:** Like + humanized comment with language detection.
+- **Session Persistence:** Login once, sessions are saved and restored automatically.
 
 ### System Features
-- **Universal Logging:** All actions logged to `logs/actions.log`.
+- **Universal Logging:** All actions logged to `logs/actions.log` with automatic rotation.
 - **Custom Delay & Count:** User-defined random delay and limit/continuous mode.
 - **2FA:** Two-Factor Authentication supported.
+- **Graceful Shutdown:** Press Ctrl+C anytime to safely exit.
+- **Retry Logic:** Built-in exponential backoff for transient failures.
 
 ---
 
